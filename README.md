@@ -1,3 +1,5 @@
+# Basic Rails Template
+
 ```bash
 rails new \
   --database postgresql \
