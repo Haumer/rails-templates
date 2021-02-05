@@ -24,7 +24,7 @@ gsub_file('Gemfile', /# gem 'redis'/, "gem 'redis'")
 
 # Assets
 run 'rm -rf vendor'
-mkdir 'mkdir app/assests/stylesheets/components'
+run 'mkdir app/assests/stylesheets/components'
 run 'touch app/assests/stylesheets/components/_flashes.scss'
 run 'touch app/assests/stylesheets/components/index.scss'
 
