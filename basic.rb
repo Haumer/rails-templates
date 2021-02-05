@@ -22,6 +22,7 @@ end
 
 gsub_file('Gemfile', /# gem 'redis'/, "gem 'redis'")
 
+Dir.mkdir 'app/assests/stylesheets/components'
 inject_into_file 'app/assests/stylesheets/components/index.scss', <<~CSS
   @import 'flashes';
 CSS
@@ -125,7 +126,6 @@ environment generators
 after_bundle do
   # Assets
   run 'rm -rf vendor'
-  Dir.mkdir 'app/assests/stylesheets/components'
   run 'touch app/assests/stylesheets/components/_flashes.scss'
   run 'touch app/assests/stylesheets/components/index.scss'
 
