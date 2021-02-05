@@ -22,7 +22,7 @@ end
 
 gsub_file('Gemfile', /# gem 'redis'/, "gem 'redis'")
 
-inject_into_file 'app/assests/stylesheets/componentsindex.scss', <<~CSS
+inject_into_file 'app/assests/stylesheets/components/index.scss', <<~CSS
   @import 'flashes';
 CSS
 
