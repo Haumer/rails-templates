@@ -4,6 +4,6 @@
 rails new \
   --database postgresql \
   --webpack \
-  -m https://raw.githubusercontent.com/lewagon/rails-templates/master/basic.rb \
+  -m https://raw.githubusercontent.com/haumer/rails-templates/master/basic.rb \
   YOUR APP NAME HERE
 ```
