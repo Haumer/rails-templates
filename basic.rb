@@ -1,4 +1,3 @@
-require 'fileutils'
 run "if uname | grep -q 'Darwin'; then pgrep spring | xargs kill -9; fi"
 
 # GEMFILE
@@ -23,7 +22,7 @@ end
 
 gsub_file('Gemfile', /# gem 'redis'/, "gem 'redis'")
 
-Dir.mkdir 'app/assests/stylesheets/components'
+run 'mkdir app/assests/stylesheets/components'
 inject_into_file 'app/assests/stylesheets/components/index.scss', <<~CSS
   @import 'flashes';
 CSS
@@ -131,7 +130,7 @@ after_bundle do
   run 'touch app/assests/stylesheets/components/index.scss'
 
   # Navbar
-  Dir.mkdir 'mkdir app/views/shared'
+  run 'mkdir app/views/shared'
   run 'touch app/views/shared/_navbar.html.erb'
   inject_into_file 'app/views/shared/_navbar.html.erb', <<~HTML
     <div class="navbar navbar-expand-sm navbar-light navbar-lewagon">
@@ -225,7 +224,7 @@ after_bundle do
   JS
 
   # Stimulus
-  Dir.mkdir 'mkdir app/javascript/controllers'
+  run 'mkdir app/javascript/controllers'
   run 'touch app/javascript/controllers/index.js'
 
   append_file 'app/javascript/packs/application.js', <<~JS
