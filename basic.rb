@@ -22,34 +22,6 @@ end
 
 gsub_file('Gemfile', /# gem 'redis'/, "gem 'redis'")
 
-system 'mkdir app/assests/stylesheets/components'
-inject_into_file 'app/assests/stylesheets/components/index.scss', <<~CSS
-  @import 'flashes';
-CSS
-
-inject_into_file 'app/assests/stylesheets/components_flashes.scss', <<~CSS
-  .alert {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 1000;
-  }
-
-  .notice {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 1000;
-  }
-
-  .success {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 1000;
-  }
-CSS
-
 # Dev environment
 gsub_file('config/environments/development.rb', /config\.assets\.debug.*/, 'config.assets.debug = false')
 
@@ -128,6 +100,33 @@ after_bundle do
   run 'rm -rf vendor'
   run 'touch app/assests/stylesheets/components/_flashes.scss'
   run 'touch app/assests/stylesheets/components/index.scss'
+  run 'mkdir app/assests/stylesheets/components'
+  inject_into_file 'app/assests/stylesheets/components/index.scss', <<~CSS
+    @import 'flashes';
+  CSS
+
+  inject_into_file 'app/assests/stylesheets/components_flashes.scss', <<~CSS
+    .alert {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+    }
+
+    .notice {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+    }
+
+    .success {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+    }
+  CSS
 
   # Navbar
   run 'mkdir app/views/shared'
