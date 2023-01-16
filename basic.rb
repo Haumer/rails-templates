@@ -1,89 +1,85 @@
 run "if uname | grep -q 'Darwin'; then pgrep spring | xargs kill -9; fi"
 
-# GEMFILE
-inject_into_file 'Gemfile', before: 'group :development, :test do' do
+# Gemfile
+########################################
+inject_into_file "Gemfile", before: "group :development, :test do" do
   <<~RUBY
-    gem 'devise'
-    gem 'autoprefixer-rails'
-    gem 'font-awesome-sass'
-    gem 'simple_form'
-    gem 'pundit'
-    gem 'view_component', require: 'view_component/engine'
+    gem "devise"
+    gem "autoprefixer-rails"
+    gem "font-awesome-sass", "~> 6.1"
+    gem "simple_form", github: "heartcombo/simple_form"
   RUBY
 end
 
-inject_into_file 'Gemfile', after: 'group :development, :test do' do
-  <<-RUBY
-  gem 'pry-byebug'
-  gem 'pry-rails'
-  gem 'dotenv-rails'
-  RUBY
+inject_into_file "Gemfile", after: 'gem "debug", platforms: %i[ mri mingw x64_mingw ]' do
+<<-RUBY
+
+  gem "dotenv-rails"
+RUBY
 end
 
-gsub_file('Gemfile', /# gem 'redis'/, "gem 'redis'")
+gsub_file("Gemfile", '# gem "sassc-rails"', 'gem "sassc-rails"')
 
-# Dev environment
-gsub_file('config/environments/development.rb', /config\.assets\.debug.*/, 'config.assets.debug = false')
+# Assets
+########################################
+run "rm -rf app/assets/stylesheets"
+run "rm -rf vendor"
+run "curl -L https://github.com/lewagon/rails-stylesheets/archive/master.zip > stylesheets.zip"
+run "unzip stylesheets.zip -d app/assets && rm -f stylesheets.zip && rm -f app/assets/rails-stylesheets-master/README.md"
+run "mv app/assets/rails-stylesheets-master app/assets/stylesheets"
+
+inject_into_file "config/initializers/assets.rb", before: "# Precompile additional assets." do
+  <<~RUBY
+    Rails.application.config.assets.paths << Rails.root.join("node_modules")
+  RUBY
+end
 
 # Layout
-if Rails.version < "6"
-  scripts = <<~HTML
-    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload', defer: true %>
-    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
-  HTML
-  gsub_file('app/views/layouts/application.html.erb', "<%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>", scripts)
-end
-gsub_file('app/views/layouts/application.html.erb', "<%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>", "<%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload', defer: true %>")
-style = <<~HTML
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-HTML
-gsub_file('app/views/layouts/application.html.erb', "<%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>", style)
+########################################
+
+gsub_file(
+  "app/views/layouts/application.html.erb",
+  '<meta name="viewport" content="width=device-width,initial-scale=1">',
+  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'
+)
 
 # Flashes
-file 'app/views/shared/_flashes.html.erb', <<~HTML
+########################################
+file "app/views/shared/_flashes.html.erb", <<~HTML
   <% if notice %>
     <div class="alert alert-info alert-dismissible fade show m-1" role="alert">
       <%= notice %>
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
       </button>
     </div>
   <% end %>
   <% if alert %>
     <div class="alert alert-warning alert-dismissible fade show m-1" role="alert">
       <%= alert %>
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-  <% end %>
-  <% if success %>
-    <div class="alert alert-success alert-dismissible fade show m-1" role="alert">
-      <%= alert %>
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
       </button>
     </div>
   <% end %>
 HTML
 
-run 'curl -L https://github.com/lewagon/awesome-navbars/raw/master/templates/_navbar_wagon.html.erb > app/views/shared/_navbar.html.erb'
+run "curl -L https://raw.githubusercontent.com/lewagon/awesome-navbars/master/templates/_navbar_wagon.html.erb > app/views/shared/_navbar.html.erb"
 
-inject_into_file 'app/views/layouts/application.html.erb', after: '<body>' do
-  <<-HTML
-    <%= render 'shared/navbar' %>
-    <%= render 'shared/flashes' %>
+inject_into_file "app/views/layouts/application.html.erb", after: "<body>" do
+  <<~HTML
+    <%= render "shared/navbar" %>
+    <%= render "shared/flashes" %>
   HTML
 end
 
 # README
-markdown_file_content = <<-MARKDOWN
-Template by [Haumer](https://www.github.com/haumer).
+########################################
+markdown_file_content = <<~MARKDOWN
+  Create by Alex Haumer <3
 MARKDOWN
-file 'README.md', markdown_file_content, force: true
+file "README.md", markdown_file_content, force: true
 
 # Generators
+########################################
 generators = <<~RUBY
   config.generators do |generate|
     generate.assets false
@@ -94,98 +90,107 @@ RUBY
 
 environment generators
 
-# AFTER BUNDLE
+########################################
+# After bundle
+########################################
 after_bundle do
-  # Assets
-  run 'rm -rf vendor'
-  run 'curl -L https://github.com/haumer/rails-templates/tree/master/components.zip > stylesheets.zip'
-  run 'unzip stylesheets.zip -d app/assets && rm stylesheets.zip && mv app/assets/rails-stylesheets-master app/assets/stylesheets'
-
-  # Navbar
-  run 'curl -L https://github.com/haumer/rails-templates/tree/master/shared.zip > stylesheets.zip'
-  run 'unzip stylesheets.zip -d app/assets && rm stylesheets.zip && mv app/assets/rails-stylesheets-master app/assets/stylesheets'
-
   # Generators: db + simple form + pages controller
-  rails_command 'db:drop db:create db:migrate'
-  generate('simple_form:install', '--bootstrap')
-  generate(:controller, 'pages', 'home', '--skip-routes', '--no-test-framework')
+  ########################################
+  rails_command "db:drop db:create db:migrate"
+  generate("simple_form:install", "--bootstrap")
+  generate("pundit:install")
+  generate(:controller, "pages", "home", "--skip-routes", "--no-test-framework")
 
   # Routes
-  route "root to: 'pages#home'"
+  ########################################
+  route 'root to: "pages#home"'
 
-  # Git ignore
-  append_file '.gitignore', <<~TXT
+  # Gitignore
+  ########################################
+  append_file ".gitignore", <<~TXT
     .env*
+    *.swp
     .DS_Store
   TXT
 
   # Devise install + user
-  generate('devise:install')
-  generate('devise', 'User')
+  ########################################
+  generate("devise:install")
+  generate("devise", "User")
 
-  # App controller
-  run 'rm app/controllers/application_controller.rb'
-  file 'app/controllers/application_controller.rb', <<~RUBY
+  # Application controller
+  ########################################
+  run "rm app/controllers/application_controller.rb"
+  file "app/controllers/application_controller.rb", <<~RUBY
     class ApplicationController < ActionController::Base
-    #{  "protect_from_forgery with: :exception\n" if Rails.version < "5.2"  }  before_action :authenticate_user!
+      before_action :authenticate_user!
     end
   RUBY
 
   # migrate + devise views
-  rails_command('db:migrate')
-  generate('devise:views')
+  ########################################
+  rails_command "db:migrate"
+  generate("devise:views")
+  gsub_file(
+    "app/views/devise/registrations/new.html.erb",
+    "<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>",
+    "<%= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), data: { turbo: :false }) do |f| %>"
+  )
+  gsub_file(
+    "app/views/devise/sessions/new.html.erb",
+    "<%= simple_form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>",
+    "<%= simple_form_for(resource, as: resource_name, url: session_path(resource_name), data: { turbo: :false }) do |f| %>"
+  )
+  link_to = <<~HTML
+    <p>Unhappy? <%= link_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?" }, method: :delete %></p>
+  HTML
+  button_to = <<~HTML
+    <div class="d-flex align-items-center">
+      <div>Unhappy?</div>
+      <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?" }, method: :delete, class: "btn btn-link" %>
+    </div>
+  HTML
+  gsub_file("app/views/devise/registrations/edit.html.erb", link_to, button_to)
 
   # Pages Controller
-  run 'rm app/controllers/pages_controller.rb'
-  file 'app/controllers/pages_controller.rb', <<~RUBY
+  ########################################
+  run "rm app/controllers/pages_controller.rb"
+  file "app/controllers/pages_controller.rb", <<~RUBY
     class PagesController < ApplicationController
       skip_before_action :authenticate_user!, only: [ :home ]
+
       def home
       end
     end
   RUBY
 
   # Environments
-  environment 'config.action_mailer.default_url_options = { host: "http://localhost:3000" }', env: 'development'
-  environment 'config.action_mailer.default_url_options = { host: "http://TODO_PUT_YOUR_DOMAIN_HERE" }', env: 'production'
+  ########################################
+  environment 'config.action_mailer.default_url_options = { host: "http://localhost:3000" }', env: "development"
+  environment 'config.action_mailer.default_url_options = { host: "http://TODO_PUT_YOUR_DOMAIN_HERE" }', env: "production"
 
-  # Webpacker / Yarn
-  run 'yarn add popper.js jquery bootstrap stimulus'
-  append_file 'app/javascript/packs/application.js', <<~JS
-    import "bootstrap";
-    document.addEventListener('turbolinks:load', () => {
-
-    });
+  # Yarn
+  ########################################
+  run "yarn add bootstrap @popperjs/core"
+  append_file "app/javascript/application.js", <<~JS
+    import "bootstrap"
   JS
 
-  # Stimulus
-  run 'curl -L https://github.com/haumer/rails-templates/tree/master/stimulus.zip > stimulus.zip'
-  run 'unzip stimulus.zip -d app/javascript && rm stimulus.zip && mv app/assets/rails-stylesheets-master app/assets/javascript'
-
-  inject_into_file 'config/webpack/environment.js', before: 'module.exports' do
-    <<~JS
-      const webpack = require('webpack');
-      environment.loaders.delete('nodeModules');
-      environment.plugins.prepend('Provide',
-        new webpack.ProvidePlugin({
-          $: 'jquery',
-          jQuery: 'jquery',
-          Popper: ['popper.js', 'default']
-        })
-      );
-    JS
-  end
+  # Heroku
+  ########################################
+  run "bundle lock --add-platform x86_64-linux"
 
   # Dotenv
-  run 'touch .env'
+  ########################################
+  run "touch '.env'"
 
   # Rubocop
-  run 'curl -L https://raw.githubusercontent.com/haumer/rails-templates/master/.rubocop.yml > .rubocop.yml'
+  ########################################
+  run "curl -L https://raw.githubusercontent.com/lewagon/rails-templates/master/.rubocop.yml > .rubocop.yml"
 
   # Git
-  git add: '.'
-  git commit: "-m 'Initial commit with a template from https://github.com/haumer/rails-templates'"
-
-  # Fix puma config
-  gsub_file('config/puma.rb', 'pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }', '# pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }')
+  ########################################
+  git :init
+  git add: "."
+  git commit: "Initial commit"
 end
